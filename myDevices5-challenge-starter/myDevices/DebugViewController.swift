@@ -27,6 +27,31 @@ class DebugViewController: UIViewController {
   var managedObjectContext: NSManagedObjectContext!
 
   @IBAction func unassignAllTapped(sender: AnyObject) {
+    
+    let fetchRequest = NSFetchRequest(entityName: "Devices")
+    fetchRequest.predicate = NSPredicate(format: "owner != nil")
+    
+    do {
+        if let results = try managedObjectContext.executeFetchRequest(fetchRequest) as? [Device] {
+            for device in results {
+                device.owner = nil
+            }
+            
+            try managedObjectContext.save()
+            
+            let alertVC = UIAlertController(title: "Update secceeded!", message: "\(results.count) devices unassigned", preferredStyle: .Alert)
+            
+            alertVC.addAction(UIAlertAction(title: "OK", style: .Cancel, handler: nil))
+            presentViewController(alertVC, animated: true, completion: nil)
+        }
+        
+    } catch {
+        
+        let alertVC = UIAlertController(title: "Update failed!", message: "There was an error while trying to unassigned", preferredStyle: .Alert)
+        
+        alertVC.addAction(UIAlertAction(title: "OK", style: .Cancel, handler: nil))
+        presentViewController(alertVC, animated: true, completion: nil)
+    }
 
   }
 
