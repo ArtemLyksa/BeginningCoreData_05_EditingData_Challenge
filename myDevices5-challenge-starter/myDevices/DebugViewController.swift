@@ -27,11 +27,70 @@ class DebugViewController: UIViewController {
   var managedObjectContext: NSManagedObjectContext!
 
   @IBAction func unassignAllTapped(sender: AnyObject) {
-
+    let fetchrequest = NSFetchRequest(entityName: "Device")
+    fetchrequest.predicate = NSPredicate(format: "owner != nil")
+    
+    do {
+        if let result = try managedObjectContext.executeFetchRequest(fetchrequest) as? [Device] {
+            for device in result {
+                device.owner = nil;
+            }
+            try managedObjectContext.save()
+            
+            let alert = UIAlertController(title: "Batch Update Succeded", message: "\(result.count) devices unassigned", preferredStyle: .Alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .Cancel, handler: nil))
+            presentViewController(alert, animated: true, completion: nil)
+        }
+    }catch{
+        let alert = UIAlertController(title: "Batch Update Failed", message: "There was an error unassigning devices", preferredStyle: .Alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .Cancel, handler: nil))
+        presentViewController(alert, animated: true, completion: nil)
+    }
   }
 
   @IBAction func deleteAllTapped(sender: AnyObject) {
+    let fetchRequest = NSFetchRequest(entityName: "Device")
+    let deviceDeleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+    deviceDeleteRequest.resultType = .ResultTypeCount
     
+    let personFetchRequest = NSFetchRequest(entityName: "Person")
+    let personDeleteRequest = NSBatchDeleteRequest(fetchRequest: personFetchRequest)
+    personDeleteRequest.resultType = .ResultTypeCount
+    
+    do {
+        let deviceResult = try managedObjectContext.executeRequest(deviceDeleteRequest) as! NSBatchDeleteResult
+        let personResult = try managedObjectContext.executeRequest(personDeleteRequest) as! NSBatchDeleteResult
+        try managedObjectContext.save()
+
+        let alert = UIAlertController(title: "Batch delete succeded", message: "\(deviceResult) devices and \(personResult) persons were deleted", preferredStyle: .Alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .Cancel, handler: nil))
+    } catch {
+        let alert = UIAlertController(title: "Batch delete failed", message: "There was an error delete batch", preferredStyle: .Alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .Cancel, handler: nil))
+        
+    }
   }
   
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
